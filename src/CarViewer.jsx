@@ -71,7 +71,7 @@ export default function CarViewer() {
   const [failed, setFailed] = useState(false);
   const [replayKey, setReplayKey] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [webgl, setWebgl] = useState(true);
+  const webgl = typeof window.WebGLRenderingContext !== 'undefined';
   const handleReady = useCallback(() => setReady(true), []);
 
   useEffect(() => {
@@ -81,17 +81,10 @@ export default function CarViewer() {
     return () => preference.removeEventListener?.('change', update);
   }, []);
 
-  useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas');
-      setWebgl(Boolean(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))));
-    } catch { setWebgl(false); }
-  }, []);
-
   return <>
     {!ready && !failed && webgl && <div className="viewer-status" role="status"><span /> Loading the car model</div>}
     {(failed || !webgl) && <div className="viewer-status viewer-error" role="status"><span>{failed ? 'Could not load the local car model.' : '3D preview is unavailable on this device.'}</span></div>}
-    {webgl && <Canvas className="car-canvas-wrap" shadows dpr={[1, 1.6]} camera={{ position: [4.4, 2.8, 6.5], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
+    {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" shadows dpr={[1, 1.6]} camera={{ position: [4.4, 2.8, 6.5], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
       <ambientLight intensity={.85} />
       <spotLight position={[3, 7, 5]} intensity={28} angle={.65} penumbra={1} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-5, 3, -4]} intensity={1.7} color="#ffe7d2" />
@@ -106,7 +99,7 @@ export default function CarViewer() {
       </Suspense>
       <ContactShadows position={[0, -.55, 0]} opacity={.4} scale={9} blur={2.6} far={3.5} />
       <OrbitControls makeDefault enablePan={false} minDistance={4.5} maxDistance={11} minPolarAngle={Math.PI / 3.8} maxPolarAngle={Math.PI / 2.05} />
-    </Canvas>}
+    </Canvas></ModelErrorBoundary>}
     {ready && <button className="replay-drive" type="button" onClick={() => setReplayKey((key) => key + 1)}>REPLAY ARRIVAL <span>↻</span></button>}
   </>;
 }

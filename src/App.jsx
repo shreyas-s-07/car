@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { projects } from './projects.js';
 import CarViewer from './CarViewer.jsx';
+import Playground from './Playground.jsx';
 
 function Header() {
-  return <header className="site-header"><a className="brand" href="#home" aria-label="Alex Morgan home"><span className="brand-mark">A<span>.</span></span><span className="brand-caption">INDEPENDENT<br />DEVELOPER</span></a><nav aria-label="Main navigation"><a href="#work">Selected work <span>03</span></a><a href="#about">About</a><a className="nav-contact" href="#contact">Let’s talk <span>↗</span></a></nav></header>;
+  return <header className="site-header"><a className="brand" href="#home" aria-label="Alex Morgan home"><span className="brand-mark">A<span>.</span></span><span className="brand-caption">INDEPENDENT<br />DEVELOPER</span></a><nav aria-label="Main navigation"><a href="#work">Selected work <span>03</span></a><a href="#playground">Playground</a><a href="#about">About</a><a className="nav-contact" href="#contact">Let’s talk <span>↗</span></a></nav></header>;
 }
 
-function Hero() {
+function Hero({ playgroundActive }) {
+  const [sceneReady, setSceneReady] = useState(true);
+  useEffect(() => {
+    if (playgroundActive) { setSceneReady(false); return undefined; }
+    const timer = window.setTimeout(() => setSceneReady(true), 800);
+    return () => window.clearTimeout(timer);
+  }, [playgroundActive]);
   return <section className="hero" id="home"><div className="hero-grid" aria-hidden="true" />
     <div className="hero-copy"><div className="eyebrow"><span className="status-pulse" /> AVAILABLE FOR SELECT PROJECTS <span className="eyebrow-line" /></div><h1>Thoughtful<br /><em>by design.</em><br />Fast by nature.</h1><p className="hero-intro">I’m Alex — a developer building digital experiences with clarity, character, and a little bit of velocity.</p><a className="button button-light" href="#work">Explore my work <span>↓</span></a></div>
-    <div className="scene-wrap" role="group" aria-label="Interactive McLaren Formula 1 car viewer"><div className="scene-topline"><span>FIG. 01 / FORMULA STUDY</span><span>DRAG TO EXPLORE <b>↗</b></span></div><div className="scene-vignette" /><CarViewer /><div className="model-caption"><span className="caption-index">01</span><span><strong>MCLAREN FORMULA 1</strong><small>INTERACTIVE 3D MODEL</small></span></div></div>
+    <div className="scene-wrap" role="group" aria-label="Interactive McLaren Formula 1 car viewer"><div className="scene-topline"><span>FIG. 01 / FORMULA STUDY</span><span>DRAG TO EXPLORE <b>↗</b></span></div><div className="scene-vignette" />{!playgroundActive && sceneReady && <CarViewer />}<div className="model-caption"><span className="caption-index">01</span><span><strong>MCLAREN FORMULA 1</strong><small>INTERACTIVE 3D MODEL</small></span></div></div>
     <div className="hero-bottom"><span>SCROLL TO EXPLORE</span><div className="scroll-line" /><span className="hero-location">PORTFOLIO / 2025—26</span></div><div className="hero-side-label" aria-hidden="true">DESIGN ENGINEERING — FRONTEND DEVELOPMENT</div>
   </section>;
 }
@@ -32,5 +39,6 @@ function Contact() {
 }
 
 export default function App() {
-  return <><Header /><main><Hero /><Work /><About /><Contact /></main><footer className="site-footer"><a className="footer-logo" href="#home">A<span>.</span></a><span>DESIGNED & BUILT WITH CARE</span><span>© 2025–26 ALEX MORGAN</span><a href="#home">BACK TO TOP ↑</a></footer></>;
+  const [playgroundActive, setPlaygroundActive] = useState(false);
+  return <><Header /><main><Hero playgroundActive={playgroundActive} /><Playground onActiveChange={setPlaygroundActive} /><Work /><About /><Contact /></main><footer className="site-footer"><a className="footer-logo" href="#home">A<span>.</span></a><span>DESIGNED & BUILT WITH CARE</span><span>© 2025–26 ALEX MORGAN</span><a href="#home">BACK TO TOP ↑</a></footer></>;
 }

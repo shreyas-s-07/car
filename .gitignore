@@ -2,3 +2,12 @@ node_modules/
 dist/
 .npm-cache/
 .vite/
+.browser-check/
+.edge-check/
+.edge-cdp/
+.edge-cdp2/
+visual-app.tmp
+visual-playground.tmp
+visual-check.mjs
+probe.mjs
+browser-driver.png
