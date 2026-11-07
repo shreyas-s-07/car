@@ -8,7 +8,7 @@ const GITHUB = 'https://github.com/S-Shreyas07';
 const LINKEDIN = 'https://www.linkedin.com/in/shreyas-s-3104b631a';
 
 function Header() {
-  return <header className="site-header"><a className="brand" href="#home" aria-label="Shreyas S home"><span className="brand-mark">S<span>.</span></span><span className="brand-caption">SOFTWARE<br />DEVELOPER</span></a><nav aria-label="Main navigation"><a href="#work">Selected work <span>01</span></a><a href="#playground">Playground</a><a href="#about">About</a><a className="nav-contact" href="#contact">Let’s talk <span>↗</span></a></nav></header>;
+  return <header className="site-header"><a className="brand" href="#home" aria-label="Shreyas S home"><span className="brand-mark">S<span>.</span></span><span className="brand-caption">SOFTWARE<br />DEVELOPER</span></a><nav aria-label="Main navigation"><a href="#work">Selected work <span>01</span></a><a href="#playground">Playground</a><a href="#about">About</a><a className="nav-contact" href="#contact">Let’s talk <span>↗</span></a></nav><details className="mobile-menu"><summary aria-label="Open navigation">Menu <span>☰</span></summary><div className="mobile-menu-links">{[['#work','Selected work'],['#playground','Playground'],['#about','About'],['#experience','Experience'],['#contact','Let’s talk']].map(([href,label]) => <a key={href} href={href} onClick={(event) => event.currentTarget.closest('details').removeAttribute('open')}>{label}<span>↗</span></a>)}</div></details></header>;
 }
 
 function Hero({ playgroundActive }) {

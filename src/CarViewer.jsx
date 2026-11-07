@@ -7,6 +7,18 @@ const MODEL_FILE = `${import.meta.env.BASE_URL}f1-car-optimized.glb`;
 // Start downloading while React lays out the page; the playground reuses this cache.
 if (typeof window !== 'undefined' && window.WebGLRenderingContext) useGLTF.preload(MODEL_FILE);
 
+function MobileCameraFit() {
+  const camera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 680px)');
+    const update = () => { camera.fov = media.matches ? 34 : 30; camera.updateProjectionMatrix(); invalidate(); };
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [camera, invalidate]);
+  return null;
+}
+
 function CarModel({ replayKey, reducedMotion, onReady, visible }) {
   const { scene } = useGLTF(MODEL_FILE);
   const carRef = useRef(null);
@@ -91,6 +103,7 @@ export default function CarViewer({ visible = true }) {
     {!ready && !failed && webgl && <div className="viewer-status" role="status"><span /> Loading the car model</div>}
     {(failed || !webgl) && <div className="viewer-status viewer-error" role="status"><span>{failed ? 'Could not load the local car model.' : '3D preview is unavailable on this device.'}</span></div>}
     {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" frameloop="demand" dpr={[1, 1.35]} camera={{ position: [3.272, .904, 6.113], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
+      <MobileCameraFit />
       <ambientLight intensity={.85} />
       <spotLight position={[3, 7, 5]} intensity={28} angle={.65} penumbra={1} />
       <directionalLight position={[-5, 3, -4]} intensity={1.7} color="#ffe7d2" />
