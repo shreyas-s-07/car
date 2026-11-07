@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const MODEL = `${import.meta.env.BASE_URL}f1-car-wheels-v2.glb`;
+const MODEL = `${import.meta.env.BASE_URL}f1-car-optimized.glb`;
 const START = { x: 0, z: 10, heading: Math.PI / 2 };
 const MONZA_START = { x: -20, z: 18, heading: Math.PI / 2 };
 // A compact, hand-drawn circuit inspired by Monza's straights and chicanes.
@@ -183,6 +183,7 @@ export default function Playground({ onActiveChange }) {
   const [resetKey, setResetKey] = useState(0);
   const [view, setView] = useState('chase');
   const [track, setTrack] = useState('oval');
+  const [stageVisible, setStageVisible] = useState(true);
   const controls = useRef({});
   const stage = useRef(null);
   const handleReady = useCallback(() => setReady(true), []);
@@ -198,6 +199,15 @@ export default function Playground({ onActiveChange }) {
     // Let the hero's renderer release its GPU resources before creating another.
     const timer = window.setTimeout(() => setCanvasReady(true), 800);
     return () => window.clearTimeout(timer);
+  }, [playing]);
+  React.useEffect(() => {
+    if (!playing || !stage.current || !('IntersectionObserver' in window)) { setStageVisible(true); return undefined; }
+    const observer = new IntersectionObserver(([entry]) => {
+      setStageVisible(entry.isIntersecting);
+      if (!entry.isIntersecting) controls.current = {};
+    }, { threshold: 0 });
+    observer.observe(stage.current);
+    return () => observer.disconnect();
   }, [playing]);
   const reset = () => { controls.current = {}; setResetKey((key) => key + 1); setSpeed(0); setOnTrack(true); };
   const chooseTrack = (next) => { if (next !== track) { setTrack(next); reset(); } };
@@ -217,7 +227,7 @@ export default function Playground({ onActiveChange }) {
       <button type="button" aria-pressed={track === 'monza'} onClick={() => chooseTrack('monza')}><span className="circuit-number">02</span><span><strong>MONZA INSPIRED</strong><small>STRAIGHTS / CHICANES / ITALY</small></span><span className="circuit-selected">{track === 'monza' ? 'SELECTED' : 'SELECT ↗'}</span></button>
     </div>
     {!playing ? <div className="playground-invite"><span className="playground-invite-index">{track === 'oval' ? '01 / THE OVAL' : '02 / MONZA INSPIRED'}</span>{track === 'oval' ? <div className="track-diagram" aria-hidden="true"><div /><span /></div> : <svg className="circuit-preview" viewBox="-50 -35 100 65" aria-hidden="true"><path d="M -35 18 L 25 18 Q 42 18 42 7 Q 42 0 34 -1 L 9 -11 L 6 -10 L 3 -13 L -12 -17 Q -20 -20 -20 -24 Q -24 -31 -29 -25 L -35 -14 L -40 -9 Q -43 -5 -38 -2 Q -35 1 -35 8 Z" /><circle cx="-20" cy="18" r="1.2" /></svg>}<div className="playground-invite-copy"><span>YOUR CAR IS READY</span><h3>Ready when<br />you are.</h3><button type="button" onClick={start}>ENTER THE PLAYGROUND <b>↗</b></button></div><span className="playground-invite-foot">A SMALL DETOUR / BIG FUN</span></div> : <div className="playground-stage" ref={stage} tabIndex={0} onKeyDown={(e) => onKey(e, true)} onKeyUp={(e) => onKey(e, false)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) controls.current = {}; }} aria-label="Driving playground. Use arrow keys or W A S D to drive. Press R to reset.">
-      {canvasReady && !failed && <PlaygroundError onError={() => setFailed(true)}><Canvas shadows dpr={[1, 1.5]} camera={{ position: [-5.8, 2.8, 10], fov: 55, near: .04, far: 200 }}><ContextMonitor onLost={handleContextLost} /><Track track={track} /><Suspense fallback={null}><DrivingCar controls={controls} resetKey={resetKey} onReady={handleReady} onSpeed={handleSpeed} view={view} track={track} /></Suspense></Canvas></PlaygroundError>}
+      {canvasReady && !failed && <PlaygroundError onError={() => setFailed(true)}><Canvas shadows frameloop={stageVisible ? 'always' : 'never'} dpr={[1, 1.5]} camera={{ position: [-5.8, 2.8, 10], fov: 55, near: .04, far: 200 }}><ContextMonitor onLost={handleContextLost} /><Track track={track} /><Suspense fallback={null}><DrivingCar controls={controls} resetKey={resetKey} onReady={handleReady} onSpeed={handleSpeed} view={view} track={track} /></Suspense></Canvas></PlaygroundError>}
       {!ready && !failed && <div className="playground-message" role="status">PREPARING YOUR CAR <span>···</span></div>}
       {failed && <div className="playground-message" role="alert">The 3D track could not start. Exit and try again, or restart your browser if graphics remain blocked.</div>}
       <div className="playground-hud"><div><small>{track === 'oval' ? 'THE OVAL / 01' : 'MONZA INSPIRED / 02'}</small><strong>{String(speed).padStart(3, '0')} <em>KM/H</em></strong><span>{onTrack ? 'ON TRACK' : 'OFF TRACK / SLOWING DOWN'}</span></div><div className="playground-actions"><button type="button" onClick={reset}>RESET <span>↻</span></button><button type="button" onClick={stop}>EXIT <span>×</span></button></div></div>

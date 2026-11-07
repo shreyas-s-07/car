@@ -1,11 +1,13 @@
 import React, { Component, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Center, ContactShadows, Environment, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Center, Environment, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const MODEL_FILE = `${import.meta.env.BASE_URL}f1-car-wheels-v2.glb`;
+const MODEL_FILE = `${import.meta.env.BASE_URL}f1-car-optimized.glb`;
+// Start downloading while React lays out the page; the playground reuses this cache.
+if (typeof window !== 'undefined' && window.WebGLRenderingContext) useGLTF.preload(MODEL_FILE);
 
-function CarModel({ replayKey, reducedMotion, onReady }) {
+function CarModel({ replayKey, reducedMotion, onReady, visible }) {
   const { scene } = useGLTF(MODEL_FILE);
   const carRef = useRef(null);
   const previousReplay = useRef(replayKey);
@@ -13,6 +15,9 @@ function CarModel({ replayKey, reducedMotion, onReady }) {
   const wheels = useRef([]);
   const wheelRotation = useRef(new THREE.Quaternion());
   const axle = useRef(new THREE.Vector3(1, 0, 0));
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => { if (visible) invalidate(); }, [invalidate, replayKey, visible]);
 
   useEffect(() => {
     wheels.current = [];
@@ -54,6 +59,7 @@ function CarModel({ replayKey, reducedMotion, onReady }) {
     car.position.set(-Math.sin(.12) * remaining, 0, -Math.cos(.12) * remaining);
     car.rotation.set(0, .12, 0);
     car.scale.setScalar(4.8);
+    if (visible && progress < 1) invalidate();
   });
 
   return <Center><group ref={carRef} scale={4.8} rotation={[0, .12, 0]}><primitive object={scene} /></group></Center>;
@@ -66,7 +72,7 @@ class ModelErrorBoundary extends Component {
   render() { return this.state.failed ? null : this.props.children; }
 }
 
-export default function CarViewer() {
+export default function CarViewer({ visible = true }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [replayKey, setReplayKey] = useState(0);
@@ -84,9 +90,9 @@ export default function CarViewer() {
   return <>
     {!ready && !failed && webgl && <div className="viewer-status" role="status"><span /> Loading the car model</div>}
     {(failed || !webgl) && <div className="viewer-status viewer-error" role="status"><span>{failed ? 'Could not load the local car model.' : '3D preview is unavailable on this device.'}</span></div>}
-    {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" shadows dpr={[1, 1.6]} camera={{ position: [4.4, 2.8, 6.5], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
+    {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" frameloop="demand" dpr={[1, 1.35]} camera={{ position: [3.116, .861, 5.822], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
       <ambientLight intensity={.85} />
-      <spotLight position={[3, 7, 5]} intensity={28} angle={.65} penumbra={1} castShadow shadow-mapSize={[1024, 1024]} />
+      <spotLight position={[3, 7, 5]} intensity={28} angle={.65} penumbra={1} />
       <directionalLight position={[-5, 3, -4]} intensity={1.7} color="#ffe7d2" />
       <pointLight position={[-4, 1.5, 1]} intensity={3} color="#d84438" />
       <Environment resolution={128}>
@@ -95,9 +101,8 @@ export default function CarViewer() {
         <Lightformer intensity={.8} position={[5, 3, -1]} scale={[5, 4, 1]} color="#d94a40" />
       </Environment>
       <Suspense fallback={null}>
-        <ModelErrorBoundary onError={() => setFailed(true)}><CarModel replayKey={replayKey} reducedMotion={reducedMotion} onReady={handleReady} /></ModelErrorBoundary>
+        <ModelErrorBoundary onError={() => setFailed(true)}><CarModel replayKey={replayKey} reducedMotion={reducedMotion} onReady={handleReady} visible={visible} /></ModelErrorBoundary>
       </Suspense>
-      <ContactShadows position={[0, -.55, 0]} opacity={.4} scale={9} blur={2.6} far={3.5} />
       <OrbitControls makeDefault enablePan={false} minDistance={4.5} maxDistance={11} minPolarAngle={Math.PI / 3.8} maxPolarAngle={Math.PI / 2.05} />
     </Canvas></ModelErrorBoundary>}
     {ready && <button className="replay-drive" type="button" onClick={() => setReplayKey((key) => key + 1)}>REPLAY ARRIVAL <span>↻</span></button>}

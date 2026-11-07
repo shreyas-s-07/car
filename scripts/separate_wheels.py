@@ -22,5 +22,5 @@ for name, side, axle_z, inner in [('wheel_rear_left',-1,-.370,.145),('wheel_rear
  for vertex in wheel.data.vertices: vertex.co -= center
  wheel.location += wheel.matrix_local.to_3x3() @ center
  bpy.context.view_layer.update()
-bpy.ops.export_scene.gltf(filepath=str(ROOT / 'public' / 'f1-car-wheels-v2.glb'),export_format='GLB',export_lights=False)
+bpy.ops.export_scene.gltf(filepath=str(ROOT / 'models' / 'f1-car-wheels-v2.glb'),export_format='GLB',export_lights=False)
 print('EXPORTED',flush=True)

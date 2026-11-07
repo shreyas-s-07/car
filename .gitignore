@@ -11,3 +11,4 @@ visual-playground.tmp
 visual-check.mjs
 probe.mjs
 browser-driver.png
+*.tex
