@@ -90,7 +90,7 @@ export default function CarViewer({ visible = true }) {
   return <>
     {!ready && !failed && webgl && <div className="viewer-status" role="status"><span /> Loading the car model</div>}
     {(failed || !webgl) && <div className="viewer-status viewer-error" role="status"><span>{failed ? 'Could not load the local car model.' : '3D preview is unavailable on this device.'}</span></div>}
-    {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" frameloop="demand" dpr={[1, 1.35]} camera={{ position: [3.116, .861, 5.822], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
+    {webgl && <ModelErrorBoundary onError={() => setFailed(true)}><Canvas className="car-canvas-wrap" frameloop="demand" dpr={[1, 1.35]} camera={{ position: [3.272, .904, 6.113], fov: 30 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }} onCreated={({ gl }) => { gl.outputColorSpace = THREE.SRGBColorSpace; gl.toneMapping = THREE.ACESFilmicToneMapping; }}>
       <ambientLight intensity={.85} />
       <spotLight position={[3, 7, 5]} intensity={28} angle={.65} penumbra={1} />
       <directionalLight position={[-5, 3, -4]} intensity={1.7} color="#ffe7d2" />
